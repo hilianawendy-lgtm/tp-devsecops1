@@ -19,6 +19,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      # 🔐 GITLEAKS SECURITY SCAN (step ajouté)
+      - name: Gitleaks scan
+        uses: zricethezav/gitleaks-action@v1
+        with:
+          args: --verbose
+
       # Install Java
       - name: Set up JDK 21
         uses: actions/setup-java@v3
@@ -26,12 +32,10 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-        # Compile Java code
+      # Compile Java code
       - name: Compile Java
         run: mvn compile
 
       # Build Maven
       - name: Build Java project with Maven
         run: mvn clean package
-
-

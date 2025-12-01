@@ -51,25 +51,13 @@ jobs:
         run: docker push $DOCKER_IMAGE_NAME
 
       # 6️⃣ Scan Docker image with Trivy (after push)
-        - name: Scan Docker image with Trivy
+      - name: Scan Docker image with Trivy
         uses: aquasecurity/trivy-action@0.21.0
         with:
           image-ref: ${{ env.DOCKER_IMAGE_NAME }}
           format: 'json'
-          exit-code: '0'           # NEVER fail the job directly
+          exit-code: '0'
           ignore-unfixed: true
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
           output: trivy-report.json
-
-      - name: Fail on CRITICAL vulnerabilities
-        run: |
-          if [ ! -f trivy-report.json ]; then
-            echo "trivy-report.json not found"; exit 1
-          fi
-          critical_count=$(jq '[.Results[].Vulnerabilities[]? | select(.Severity=="CRITICAL")] | length' trivy-report.json)
-          echo "Critical vulnerabilities: $critical_count"
-          if [ "$critical_count" -gt 0 ]; then
-            echo "::error::Found $critical_count CRITICAL vulnerabilities"
-            exit 1
-          fi

@@ -1,5 +1,3 @@
-name: CI/CD - democyber
-
 on:
   push:
     branches: [ main ]
@@ -46,15 +44,32 @@ jobs:
       - name: Build Docker image
         run: docker build -t $DOCKER_IMAGE_NAME .
 
-      # 6️⃣ Trivy scan (TP3 obligatoire)
+      # 6️⃣ Scan Docker image with Trivy (TP3 obligatoire)
       - name: Scan Docker image with Trivy
-  uses: aquasecurity/trivy-action@0.21.0
-  with:
-    image-ref: ${{ env.DOCKER_IMAGE_NAME }}
-    format: 'json'
-    exit-code: '1'
-    ignore-unfixed: true
-    vuln-type: 'os,library'
-    severity: 'CRITICAL,HIGH'
-    output: trivy-report.json
+        uses: aquasecurity/trivy-action@0.21.0
+        with:
+          image-ref: ${{ env.DOCKER_IMAGE_NAME }}
+          format: 'json'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+          output: trivy-report.json
 
+      - name: Upload Trivy report
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-report
+          path: trivy-report.json
+
+      # 7️⃣ Login Docker Hub
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # 8️⃣ Push Docker image (seulement si tout est OK)
+      - name: Push Docker image
+        if: success()
+        run: docker push $DOCKER_IMAGE_NAME

@@ -48,10 +48,13 @@ jobs:
 
       # 6️⃣ Trivy scan (TP3 obligatoire)
       - name: Scan Docker image with Trivy
-        uses: aquasecurity/trivy-action@v0.20.0
-        with:
-          image-ref: ${{ env.DOCKER_IMAGE_NAME }}
-          format: 'json'
-          exit-code: '1'               # ❗ Échoue si vulnérabilités CRITICAL/HIGH
-          ignore-unfixed: true
-          vuln-type: 'os,library'
+  uses: aquasecurity/trivy-action@0.21.0
+  with:
+    image-ref: ${{ env.DOCKER_IMAGE_NAME }}
+    format: 'json'
+    exit-code: '1'
+    ignore-unfixed: true
+    vuln-type: 'os,library'
+    severity: 'CRITICAL,HIGH'
+    output: trivy-report.json
+

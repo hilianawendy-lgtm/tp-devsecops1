@@ -6,7 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class SimpleTest {
 
     @Test
-    void testBasic() {
-        assertEquals(2, 1 + 1, "Test simple pour vérifier JUnit");
+    void additionTest() {
+        int result = 2 + 3;
+        assertEquals(5, result);
     }
 }

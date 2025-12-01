@@ -15,22 +15,43 @@ jobs:
       VERSION: 1.0.0
 
     steps:
+      # 1️⃣ Checkout
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Gitleaks scan
-        uses: zricethezav/gitleaks-action@v1
+      # 2️⃣ Gitleaks scan (version TP3 + rapport SARIF)
+      - name: Run Gitleaks scan
+        uses: zricethezav/gitleaks-action@v2
         with:
-          args: --verbose
+          args: --report-format sarif --report-path gitleaks-results.sarif
 
+      - name: Upload Gitleaks report
+        uses: actions/upload-artifact@v4
+        with:
+          name: gitleaks-report
+          path: gitleaks-results.sarif
+
+      # 3️⃣ Setup Java 17
       - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
           java-version: '17'
           distribution: 'temurin'
 
+      # 4️⃣ Build + tests Maven
       - name: Build and test Java project
         run: mvn clean verify
 
-      - name: Set version
-        run: echo "version=$VERSION" >> $GITHUB_OUTPUT
+      # 5️⃣ Build Docker image
+      - name: Build Docker image
+        run: docker build -t $DOCKER_IMAGE_NAME .
+
+      # 6️⃣ Trivy scan (TP3 obligatoire)
+      - name: Scan Docker image with Trivy
+        uses: aquasecurity/trivy-action@v0.20.0
+        with:
+          image-ref: ${{ env.DOCKER_IMAGE_NAME }}
+          format: 'json'
+          exit-code: '1'               # ❗ Échoue si vulnérabilités CRITICAL/HIGH
+          ignore-unfixed: true
+          vuln-type: 'os,library'
